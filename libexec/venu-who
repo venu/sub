@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Summary: Check who's logged in
+# Help: 
+# Shows Logged in users 
+
+set -e
+
+who

@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -e
+
+print_summaries() {
+  for file in $_VENU_ROOT/libexec/venu-*; do
+    if [ ! -h $file ]; then
+      local summary=$(grep "^# Summary:" $file | cut -d ' ' -f3-)
+      if [ -n "$summary" ]; then
+        local name=$(basename $file | sed 's/venu-//')
+        echo "$name" | awk '{ printf "   %-20s   ", $1}'
+        echo -n $summary
+        echo
+      fi
+    fi
+  done
+}
+
+print_help() {
+  local usage=$(grep "^# Usage:" $1 | cut -d ' ' -f2-)
+  local halp="$(awk '/^# Help:/,/^[^#]/' $1 | grep "^#" | sed "s/^# Help: //" | sed "s/^# //" | sed "s/^#//")"
+
+  if [ -n "$usage" ]; then
+    echo $usage
+    [ -n "$halp" ] && echo && echo "$halp"
+  else
+    echo "Sorry, this command isn't documented yet."
+  fi
+}
+
+# Provide venu completions
+if [ "$1" = "--complete" ]; then
+  exec "venu-commands"
+  exit
+fi
+
+case "$1" in
+"") echo "Usage: venu <command> [<args>]
+
+Some useful venu commands are:
+$(print_summaries)
+
+See 'venu help <command>' for information on a specific command."
+;;
+*)
+  command_path="$(command -v "$_VENU_ROOT/libexec/venu-$1" || true)"
+  if [ -n "$command_path" ]; then
+    print_help "$_VENU_ROOT/libexec/venu-$1"
+  else
+    echo "venu: no such command \`$1'"
+  fi
+esac
